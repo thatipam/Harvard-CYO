@@ -1,7 +1,7 @@
 ---
 title: "HarvardX Data Science - Capstone - CYO Project"
 author: "Mruthyum J Thatipamala"
-date: "01/10/2020"
+date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
@@ -25,11 +25,11 @@ The dataset "covid_de.csv" provides daily updated number of reported cases & dea
 
 The dataser "demographics_de.csv" provides a general demographic data of Germany at state level.
 
-Statical analyses conducted, regression models used and predictions algorithms implemented consists starting from linear models to progressing to non-linear models using the train sets and test sets. Results are visualized with appropriate graphs for better understanding of the data trends and outcomes of the analyses. Accuracy is measured for every model in terms of Residual Mean Square Error (RMSE) of actual cases and predicted numbers.
+Statical analyses conducted, regression models used and predictions algorithms implemented consists starting from linear models to progressing to non-linear models using the train sets and test sets. Results are visualized with appropriate graphs for better understanding of the data trends and outcomes of the analyses. Precision of every model is measured in terms of Residual Mean Square Error (RMSE) or Accuracy, as the case applicable, of actual cases and predicted numbers.
 
-A comparision table is provided towards the end tabulating the accuracy number of each model. Also, some observations made during the analysis and recommendations for future work also documented.
+A comparision table is provided towards the end tabulating the precision number of each model. Also, some observations made during the analysis and recommendations for future work also documented.
 
-NOTE: If you closely observe the data the cumulative daily cases are as high as the order 10 to the power of 5. Hence,tTo keep the calculated accuracy number less than 1.0 for better reading and understanding, RMSE is calculated after reducing the actual cases and predicted numbers per 10000 people respectively.
+NOTE: If you closely observe the data the cumulative daily cases are as high as the order 10 to the power of 5. Hence,to keep the calculated accuracy number less than 1.0 for better reading and understanding, RMSE/Accuracy is calculated after reducing the actual cases and predicted numbers per 10000 people respectively.
 &nbsp;
 &nbsp;
 
@@ -124,10 +124,9 @@ There are 192 observations of 4 variables
 
 ### Predictive and Responsive variables:
 
-An alternate variable **CUSUM_cases** (a cumulative sum at daily level rather than total daily cases) is an effective number for better performance in modeling, regression, and forecasting using different models. Hence, this number is calculated where and when required and used as predictive variable.
+A calculated intermediary variable **CUSUM_cases** (a cumulative sum of **cases** at daily level) is an effective number for better performance in modeling, regression, and forecasting using different models. Hence, this number is calculated where and when required and used as predictive variable.
 
-Hence, the outcome we want to predict is daily cumulative cases and
-the features that we will use to predict the outcome are ndays, age group and gender.
+The features, i.e. responsive variables, we will use to predict the outcome are ndays, age group and gender.
 &nbsp;
 
 ## Step 5: Data Cleaning
@@ -268,7 +267,7 @@ y_hat <- predict(fit_lm, coviddf_date_totals)
 #Calculate RMSE and insert into a tibble
 rmse_lm <- RMSE((y_hat)/country_pop*10000, (coviddf_date_totals$CUSUM_cases/country_pop)*10000)
 rmse_lm
-rmse_table <- tibble(Method = "Linear Model", RMSE_or_Accuracy = rmse_lm)
+rmse_table <- tibble(Method = "Linear Model", RMSE = rmse_lm)
 
 #We have seen that linear regression was not flexible enough to capture the non-linear nature of
 #CUSUM_cases. Hence, adopting smoothing approaches may provide an improvement.
@@ -286,7 +285,7 @@ coviddf_date_totals %>% mutate(smooth = fit$y) %>% ggplot(aes(ndays, CUSUM_cases
 
 rmse1 <- RMSE((fit$y)/country_pop*10000, (coviddf_date_totals$CUSUM_cases/country_pop)*10000)
 rmse1
-rmse_table <- rmse_table %>% add_row(Method = "ksmooth", RMSE_or_Accuracy = rmse1)
+rmse_table <- rmse_table %>% add_row(Method = "ksmooth", RMSE = rmse1)
 
 #Local Weighted Regression (loess), another smoothing approach, assumes that data is locally
 #linear. For this purpose a 25-day span used
@@ -301,7 +300,7 @@ coviddf_date_totals %>% mutate(smooth = fit$fitted) %>% ggplot(aes(ndays, CUSUM_
 
 rmse2 <- RMSE((fit$fitted)/country_pop*10000, (coviddf_date_totals$CUSUM_cases/country_pop)*10000)
 rmse2
-rmse_table <- rmse_table %>% add_row(Method = "loess", RMSE_or_Accuracy = rmse2)
+rmse_table <- rmse_table %>% add_row(Method = "loess", RMSE = rmse2)
 ```
 &nbsp;
 &nbsp;
@@ -333,7 +332,7 @@ ggplot(coviddf_date_totals, aes(ndays, CUSUM_cases)) +
 
 rmse3 <- RMSE((preds$fit)/country_pop*10000, (coviddf_date_totals$CUSUM_cases/country_pop)*10000)
 rmse3
-rmse_table <- rmse_table %>% add_row(Method = "poly-14degree", RMSE_or_Accuracy = rmse3)
+rmse_table <- rmse_table %>% add_row(Method = "poly-14degree", RMSE = rmse3)
 
 #Knn algorithm is similar to bin and loess smoothing, but it maximizes accuracy, or minimizes the
 #expected MSE
@@ -351,7 +350,7 @@ train_knn <- train(CUSUM_cases ~ ., method = "knn", data = trainset)
 y_hat_knn <- predict(train_knn, testset, type = "raw", na.action = na.pass)
 rmse5 <- RMSE((y_hat_knn)/country_pop*10000, (testset$CUSUM_cases/country_pop)*10000)
 rmse5
-rmse_table <- rmse_table %>% add_row(Method = "knn(k=5)", RMSE_or_Accuracy = rmse5)
+rmse_table <- rmse_table %>% add_row(Method = "knn(k=5)", RMSE = rmse5)
 
 #We want to pick the k that maximizes accuracy, or minimizes the expected MSE  
 
@@ -367,7 +366,7 @@ train_knn_cv$bestTune
 y_hat_knn <- predict(train_knn_cv, testset, type = "raw", na.action = na.pass)
 rmse6 <- RMSE((y_hat_knn)/country_pop*10000, (testset$CUSUM_cases/country_pop)*10000)
 rmse6
-rmse_table <- rmse_table %>% add_row(Method = "knn-cross_valid", RMSE_or_Accuracy = rmse6)
+rmse_table <- rmse_table %>% add_row(Method = "knn-cross_valid", RMSE = rmse6)
 ```
 &nbsp;
 &nbsp;
@@ -418,7 +417,7 @@ test$pred <- predict(fit_tree, newdata = test, type="class")
 cm <- confusionMatrix(test$pred, test$gender)
 cm$table
 cm$overall["Accuracy"]
-rmse_table <- rmse_table %>% add_row(Method = "DecisionTree - Gender", RMSE_or_Accuracy = cm$overall["Accuracy"])
+accuracy_table <- tibble(Method = "DecisionTree - Gender", Accuracy = cm$overall["Accuracy"])
 
 #It is also important to examine sensitivity and specificity and not just accuracy
 cm$byClass[c("Sensitivity","Specificity", "Prevalence")] #> Sensitivity Specificity Prevalence
@@ -437,7 +436,7 @@ test$pred <- predict(fit_tree, newdata = test, type="class")
 cm <- confusionMatrix(test$pred, test$age_group)
 cm$table
 cm$overall["Accuracy"]
-rmse_table <- rmse_table %>% add_row(Method = "DecisionTree - Age", RMSE_or_Accuracy = cm$overall["Accuracy"])
+accuracy_table <- accuracy_table %>% add_row(Method = "DecisionTree - Age", Accuracy = cm$overall["Accuracy"])
 
 #It is also important to examine sensitivity and specificity and not just accuracy
 cm$byClass[c("Sensitivity","Specificity", "Prevalence")] #> Sensitivity Specificity Prevalence
@@ -467,7 +466,7 @@ testset %>% ggplot() +
 
 rmse7 <- RMSE((y_hat/country_pop)*10000, (testset$CUSUM_cases/country_pop)*10000)
 rmse7
-rmse_table <- rmse_table %>% add_row(Method = "rforest-country", RMSE_or_Accuracy = rmse7)
+rmse_table <- rmse_table %>% add_row(Method = "rforest-country", RMSE = rmse7)
 
 #Random Forest for sum of top 3 states
 coviddf_lab_3states_cum_ndays <- coviddf_lab_3states_cum %>% group_by(ndays) %>% summarize(tot_cases = sum(tot_cases), tot_deaths = sum(tot_deaths), tot_recover = sum(tot_recover), CUSUM_cases = sum(CUSUM_cases), cum_t_d = sum(cum_t_d), cum_t_r = sum(cum_t_r))
@@ -487,13 +486,14 @@ testset %>% ggplot() +
 
 rmse8 <- RMSE((y_hat/country_pop)*10000, (testset$CUSUM_cases/country_pop)*10000)
 rmse8
-rmse_table <- rmse_table %>% add_row(Method = "rforest-top3States", RMSE_or_Accuracy = rmse8)
+rmse_table <- rmse_table %>% add_row(Method = "rforest-top3States", RMSE = rmse8)
 ```
 &nbsp;
 
 ## Step 11: Models Performance
 ```{r listing RMSE values and comparing and , echo=TRUE}
-kable(rmse_table, caption = "Models Performance")
+kable(rmse_table, caption = "Linear RMSE Performance")
+kable(accuracy_table, caption = "Non-Linear Accuracy Performace" )
 ```
 &nbsp;
 
