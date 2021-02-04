@@ -191,7 +191,7 @@ rmse1
 rmse_table <- rmse_table %>% add_row(Method = "ksmooth", RMSE_or_Accuracy = rmse1)
 
 #Local Weighted Regression (loess), another smoothing approach, assumes that data is locally
-#linear. For this purpose a 25-day span used
+#linear. For this purpose a 25-day span used.
 
 span <- 25
 fit <- loess(CUSUM_cases~ndays, degree=2, span = span, data=coviddf_date_totals)
